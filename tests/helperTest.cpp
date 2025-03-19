@@ -60,3 +60,62 @@ TEST(SimHelpers, RightTurn)
     EXPECT_FALSE(SimIsRightTurn(NORTH, EAST));
     EXPECT_FALSE(SimIsRightTurn(NORTH, NORTH));
 }
+
+TEST(SimHelpers, RightTurnFromLane)
+{
+    struct Road road;
+    road.position = NORTH;
+    road.laneCount = 1;
+    road.lane[0].road = &road;
+    road.lane[0].direction.west = 1;    
+    EXPECT_TRUE(SimCanTurnRightFromLane(&road.lane[0]));
+    road.lane[0].direction.west = 0;
+    road.lane[0].direction.north = 1;
+    road.lane[0].direction.east = 1;
+    EXPECT_FALSE(SimCanTurnRightFromLane(&road.lane[0]));
+    road.position = SOUTH;
+    road.lane[0].direction.east = 1;
+    EXPECT_TRUE(SimCanTurnRightFromLane(&road.lane[0]));
+    road.lane[0].direction.east = 0;
+    EXPECT_FALSE(SimCanTurnRightFromLane(&road.lane[0]));
+}
+
+TEST(SimHelper, RightHand)
+{
+    struct Road road[2];
+    struct Vehicle v[2];
+    road[0].laneCount = 1;
+    road[0].lane[0].road = &road[0];
+    road[0].lane[0].vehicleCount = 1;
+    road[0].lane[0].vehicles = &v[0];
+    v[0].lane = &road[0].lane[0];
+
+    road[1].laneCount = 1;
+    road[1].lane[0].road = &road[1];
+    road[1].lane[0].vehicleCount = 1;
+    road[1].lane[0].vehicles = &v[1];
+    v[1].lane = &road[1].lane[0];
+
+    road[0].position = NORTH;
+    road[1].position = EAST;
+    EXPECT_TRUE(SimIsAtRightHand(&v[0], &v[1]));
+    road[0].position = SOUTH;
+    road[1].position = WEST;
+    EXPECT_TRUE(SimIsAtRightHand(&v[0], &v[1]));
+    road[0].position = WEST;
+    road[1].position = NORTH;
+    EXPECT_TRUE(SimIsAtRightHand(&v[0], &v[1]));
+    road[0].position = EAST;
+    road[1].position = SOUTH;
+    EXPECT_TRUE(SimIsAtRightHand(&v[0], &v[1]));
+
+    road[0].position = NORTH;
+    road[1].position = NORTH;
+    EXPECT_FALSE(SimIsAtRightHand(&v[0], &v[1]));
+
+    road[1].position = SOUTH;
+    EXPECT_FALSE(SimIsAtRightHand(&v[0], &v[1]));
+
+    road[1].position = WEST;
+    EXPECT_FALSE(SimIsAtRightHand(&v[0], &v[1]));
+}
